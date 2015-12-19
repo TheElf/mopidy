@@ -1,7 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 
-import os
-
 import mock
 
 import pkg_resources
@@ -56,17 +54,17 @@ class TestExtension(object):
             extension.setup(None)
 
     def test_get_cache_dir_raises_assertion_error(self, extension):
-        config = {'core': {'cache_dir': '/tmp'}}
+        config = {'core': {'cache_dir': b'/tmp'}}
         with pytest.raises(AssertionError):  # ext_name not set
             ext.Extension.get_cache_dir(config)
 
     def test_get_config_dir_raises_assertion_error(self, extension):
-        config = {'core': {'config_dir': '/tmp'}}
+        config = {'core': {'config_dir': b'/tmp'}}
         with pytest.raises(AssertionError):  # ext_name not set
             ext.Extension.get_config_dir(config)
 
     def test_get_data_dir_raises_assertion_error(self, extension):
-        config = {'core': {'data_dir': '/tmp'}}
+        config = {'core': {'data_dir': b'/tmp'}}
         with pytest.raises(AssertionError):  # ext_name not set
             ext.Extension.get_data_dir(config)
 
@@ -240,34 +238,31 @@ class TestValidateExtensionData(object):
         assert not ext.validate_extension_data(ext_data)
 
     def test_get_cache_dir(self, ext_data):
-        core_cache_dir = '/tmp'
+        core_cache_dir = b'/tmp'
         config = {'core': {'cache_dir': core_cache_dir}}
         extension = ext_data.extension
 
         with mock.patch.object(ext.path, 'get_or_create_dir'):
             cache_dir = extension.get_cache_dir(config)
 
-        expected = os.path.join(core_cache_dir, extension.ext_name)
-        assert cache_dir == expected
+        assert cache_dir == b'/tmp/foobar'
 
     def test_get_config_dir(self, ext_data):
-        core_config_dir = '/tmp'
+        core_config_dir = b'/tmp'
         config = {'core': {'config_dir': core_config_dir}}
         extension = ext_data.extension
 
         with mock.patch.object(ext.path, 'get_or_create_dir'):
             config_dir = extension.get_config_dir(config)
 
-        expected = os.path.join(core_config_dir, extension.ext_name)
-        assert config_dir == expected
+        assert config_dir == b'/tmp/foobar'
 
     def test_get_data_dir(self, ext_data):
-        core_data_dir = '/tmp'
+        core_data_dir = b'/tmp'
         config = {'core': {'data_dir': core_data_dir}}
         extension = ext_data.extension
 
         with mock.patch.object(ext.path, 'get_or_create_dir'):
             data_dir = extension.get_data_dir(config)
 
-        expected = os.path.join(core_data_dir, extension.ext_name)
-        assert data_dir == expected
+        assert data_dir == b'/tmp/foobar'

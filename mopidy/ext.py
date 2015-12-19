@@ -70,8 +70,8 @@ class Extension(object):
         :return: string
         """
         assert cls.ext_name is not None
-        cache_dir_path = bytes(os.path.join(config['core']['cache_dir'],
-                                            cls.ext_name))
+        cache_dir_path = os.path.join(
+            config['core']['cache_dir'], cls.ext_name.encode('utf-8'))
         path.get_or_create_dir(cache_dir_path)
         return cache_dir_path
 
@@ -83,8 +83,8 @@ class Extension(object):
         :return: string
         """
         assert cls.ext_name is not None
-        config_dir_path = bytes(os.path.join(config['core']['config_dir'],
-                                             cls.ext_name))
+        config_dir_path = os.path.join(
+            config['core']['config_dir'], cls.ext_name.encode('utf-8'))
         path.get_or_create_dir(config_dir_path)
         return config_dir_path
 
@@ -98,8 +98,8 @@ class Extension(object):
         :returns: string
         """
         assert cls.ext_name is not None
-        data_dir_path = bytes(os.path.join(config['core']['data_dir'],
-                                           cls.ext_name))
+        data_dir_path = os.path.join(
+            config['core']['data_dir'], cls.ext_name.encode('utf-8'))
         path.get_or_create_dir(data_dir_path)
         return data_dir_path
 
