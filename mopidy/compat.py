@@ -8,6 +8,7 @@ PY3 = sys.version_info[0] == 3
 if PY2:
     import ConfigParser as configparser  # noqa
     import Queue as queue  # noqa
+    import itertools
     import thread  # noqa
 
     def fake_python3_urllib_module():
@@ -39,8 +40,11 @@ if PY2:
     def itervalues(dct, **kwargs):
         return iter(dct.itervalues(**kwargs))
 
+    zip_longest = itertools.izip_longest
+
 else:
     import configparser  # noqa
+    import itertools
     import queue  # noqa
     import _thread as thread  # noqa
     import urllib  # noqa
@@ -54,3 +58,5 @@ else:
 
     def itervalues(dct, **kwargs):
         return iter(dct.values(**kwargs))
+
+    zip_longest = itertools.zip_longest

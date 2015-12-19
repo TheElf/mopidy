@@ -1,9 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import copy
-import itertools
 import weakref
 
+from mopidy import compat
 from mopidy.internal import deprecation
 from mopidy.models.fields import Field
 
@@ -55,7 +55,7 @@ class ImmutableObject(object):
             self.__dict__[name] = value
 
     def _items(self):
-        return self.__dict__.iteritems()
+        return self.__dict__.items()
 
     def __repr__(self):
         kwarg_pairs = []
@@ -79,7 +79,7 @@ class ImmutableObject(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return all(a == b for a, b in itertools.izip_longest(
+        return all(a == b for a, b in compat.zip_longest(
             self._items(), other._items(), fillvalue=object()))
 
     def __ne__(self, other):
