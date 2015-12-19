@@ -330,21 +330,21 @@ class ConnectionTest(unittest.TestCase):
 
     def test_queue_send_acquires_and_releases_lock(self):
         self.mock.send_lock = Mock()
-        self.mock.send_buffer = ''
+        self.mock.send_buffer = b''
 
-        network.Connection.queue_send(self.mock, 'data')
+        network.Connection.queue_send(self.mock, b'data')
         self.mock.send_lock.acquire.assert_called_once_with(True)
         self.mock.send_lock.release.assert_called_once_with()
 
     def test_queue_send_calls_send(self):
-        self.mock.send_buffer = ''
+        self.mock.send_buffer = b''
         self.mock.send_lock = Mock()
-        self.mock.send.return_value = ''
+        self.mock.send.return_value = b''
 
-        network.Connection.queue_send(self.mock, 'data')
-        self.mock.send.assert_called_once_with('data')
+        network.Connection.queue_send(self.mock, b'data')
+        self.mock.send.assert_called_once_with(b'data')
         self.assertEqual(0, self.mock.enable_send.call_count)
-        self.assertEqual('', self.mock.send_buffer)
+        self.assertEqual(b'', self.mock.send_buffer)
 
     def test_queue_send_calls_enable_send_for_partial_send(self):
         self.mock.send_buffer = ''
@@ -528,28 +528,28 @@ class ConnectionTest(unittest.TestCase):
         for error in (errno.EWOULDBLOCK, errno.EINTR):
             self.mock.sock.send.side_effect = socket.error(error, '')
 
-            network.Connection.send(self.mock, 'data')
+            network.Connection.send(self.mock, b'data')
             self.assertEqual(0, self.mock.stop.call_count)
 
     def test_send_calls_socket_send(self):
         self.mock.sock = Mock(spec=socket.SocketType)
         self.mock.sock.send.return_value = 4
 
-        self.assertEqual('', network.Connection.send(self.mock, 'data'))
-        self.mock.sock.send.assert_called_once_with('data')
+        self.assertEqual(b'', network.Connection.send(self.mock, b'data'))
+        self.mock.sock.send.assert_called_once_with(b'data')
 
     def test_send_calls_socket_send_partial_send(self):
         self.mock.sock = Mock(spec=socket.SocketType)
         self.mock.sock.send.return_value = 2
 
-        self.assertEqual('ta', network.Connection.send(self.mock, 'data'))
-        self.mock.sock.send.assert_called_once_with('data')
+        self.assertEqual(b'ta', network.Connection.send(self.mock, b'data'))
+        self.mock.sock.send.assert_called_once_with(b'data')
 
     def test_send_unrecoverable_error(self):
         self.mock.sock = Mock(spec=socket.SocketType)
         self.mock.sock.send.side_effect = socket.error
 
-        self.assertEqual('', network.Connection.send(self.mock, 'data'))
+        self.assertEqual(b'', network.Connection.send(self.mock, b'data'))
         self.mock.stop.assert_called_once_with(any_unicode)
 
     def test_timeout_callback(self):

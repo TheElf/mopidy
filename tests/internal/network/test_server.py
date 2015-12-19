@@ -123,7 +123,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(0, self.mock.init_connection.call_count)
 
     def test_accept_connection(self):
-        sock = Mock(spec=socket.SocketType)
+        sock = Mock()
         sock.accept.return_value = (sentinel.sock, sentinel.addr)
         self.mock.server_socket = sock
 
@@ -132,7 +132,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(sentinel.addr, addr)
 
     def test_accept_connection_recoverable_error(self):
-        sock = Mock(spec=socket.SocketType)
+        sock = Mock()
         self.mock.server_socket = sock
 
         for error in (errno.EAGAIN, errno.EINTR):
@@ -142,7 +142,7 @@ class ServerTest(unittest.TestCase):
 
     # FIXME decide if this should be allowed to propegate
     def test_accept_connection_unrecoverable_error(self):
-        sock = Mock(spec=socket.SocketType)
+        sock = Mock()
         self.mock.server_socket = sock
         sock.accept.side_effect = socket.error
         with self.assertRaises(socket.error):

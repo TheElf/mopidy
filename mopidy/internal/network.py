@@ -206,7 +206,7 @@ class Connection(object):
 
     def enable_timeout(self):
         """Reactivate timeout mechanism."""
-        if self.timeout <= 0:
+        if self.timeout is None or self.timeout <= 0:
             return
 
         self.disable_timeout()
@@ -315,7 +315,7 @@ class LineProtocol(pykka.ThreadingActor):
     """
 
     #: Line terminator to use for outputed lines.
-    terminator = '\n'
+    terminator = b'\n'
 
     #: Regex to use for spliting lines, will be set compiled version of its
     #: own value, or to ``terminator``s value if it is not set itself.
@@ -377,7 +377,7 @@ class LineProtocol(pykka.ThreadingActor):
 
     def parse_lines(self):
         """Consume new data and yield any lines found."""
-        while re.search(self.terminator, self.recv_buffer):
+        while re.search(self.delimiter, self.recv_buffer):
             line, self.recv_buffer = self.delimiter.split(
                 self.recv_buffer, 1)
             yield line
@@ -414,7 +414,7 @@ class LineProtocol(pykka.ThreadingActor):
 
     def join_lines(self, lines):
         if not lines:
-            return ''
+            return b''
         return self.terminator.join(lines) + self.terminator
 
     def send_lines(self, lines):
@@ -427,5 +427,6 @@ class LineProtocol(pykka.ThreadingActor):
         if not lines:
             return
 
+        lines = [self.encode(line) for line in lines]
         data = self.join_lines(lines)
-        self.connection.queue_send(self.encode(data))
+        self.connection.queue_send(data)
