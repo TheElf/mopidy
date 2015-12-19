@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import os
 import stat
-import string
 import threading
 
 from mopidy import compat, exceptions
@@ -19,7 +18,7 @@ XDG_DIRS = xdg.get_dirs()
 
 def get_or_create_dir(dir_path):
     if not isinstance(dir_path, bytes):
-        raise ValueError('Path is not a bytestring.')
+        raise ValueError('Path is not a bytestring: %r' % dir_path)
     dir_path = expand_path(dir_path)
     if os.path.isfile(dir_path):
         raise OSError(
@@ -33,7 +32,7 @@ def get_or_create_dir(dir_path):
 
 def get_or_create_file(file_path, mkdir=True, content=None):
     if not isinstance(file_path, bytes):
-        raise ValueError('Path is not a bytestring.')
+        raise ValueError('Path is not a bytestring: %r' % file_path)
     file_path = expand_path(file_path)
     if isinstance(content, compat.text_type):
         content = content.encode('utf-8')
@@ -59,8 +58,11 @@ def path_to_uri(path):
     """
     if isinstance(path, compat.text_type):
         path = path.encode('utf-8')
-    path = urllib.parse.quote(path)
-    return urllib.parse.urlunsplit((b'file', b'', path, b'', b''))
+    if compat.PY2:
+        path = urllib.parse.quote(path)
+    else:
+        path = urllib.parse.quote_from_bytes(path)
+    return urllib.parse.urlunsplit(('file', '', path, '', ''))
 
 
 def uri_to_path(uri):
@@ -74,12 +76,17 @@ def uri_to_path(uri):
     look up the matching dir or file on your file system because the exact path
     would be lost by ignoring its encoding.
     """
-    if isinstance(uri, compat.text_type):
-        uri = uri.encode('utf-8')
-    return urllib.parse.unquote(urllib.parse.urlsplit(uri).path)
+    if compat.PY2:
+        if isinstance(uri, compat.text_type):
+            uri = uri.encode('utf-8')
+        return urllib.parse.unquote(urllib.parse.urlsplit(uri).path)
+    else:
+        return urllib.parse.unquote_to_bytes(urllib.parse.urlsplit(uri).path)
 
 
 def split_path(path):
+    if isinstance(path, compat.text_type):
+        raise TypeError('Expects bytes, got %s' % type(path))
     parts = []
     while True:
         path, part = os.path.split(path)
@@ -93,10 +100,11 @@ def split_path(path):
 def expand_path(path):
     # TODO: document as we want people to use this.
     if not isinstance(path, bytes):
-        raise ValueError('Path is not a bytestring.')
-    try:
-        path = string.Template(path).substitute(XDG_DIRS)
-    except KeyError:
+        raise ValueError('Path is not a bytestring: %r' % path)
+    for xdg_var, xdg_dir in XDG_DIRS.items():
+        var = ('$' + xdg_var).encode('utf-8')
+        path = path.replace(var, xdg_dir)
+    if b'$' in path:
         return None
     path = os.path.expanduser(path)
     path = os.path.abspath(path)

@@ -18,6 +18,8 @@ class GetOrCreateDirTest(unittest.TestCase):
 
     def setUp(self):  # noqa: N802
         self.parent = tempfile.mkdtemp()
+        if compat.PY3:
+            self.parent = self.parent.encode('utf-8')
 
     def tearDown(self):  # noqa: N802
         if os.path.isdir(self.parent):
@@ -70,6 +72,8 @@ class GetOrCreateFileTest(unittest.TestCase):
 
     def setUp(self):  # noqa: N802
         self.parent = tempfile.mkdtemp()
+        if compat.PY3:
+            self.parent = self.parent.encode('utf-8')
 
     def tearDown(self):  # noqa: N802
         if os.path.isdir(self.parent):
@@ -125,13 +129,13 @@ class GetOrCreateFileTest(unittest.TestCase):
     def test_create_dir_with_bytes_content(self):
         file_path = os.path.join(self.parent, b'test')
         created = path.get_or_create_file(file_path, content=b'foobar')
-        with open(created) as fh:
+        with open(created, 'rb') as fh:
             self.assertEqual(fh.read(), b'foobar')
 
     def test_create_dir_with_unicode_content(self):
         file_path = os.path.join(self.parent, b'test')
         created = path.get_or_create_file(file_path, content='foobaræøå')
-        with open(created) as fh:
+        with open(created, 'rb') as fh:
             self.assertEqual(fh.read(), b'foobar\xc3\xa6\xc3\xb8\xc3\xa5')
 
 
@@ -180,20 +184,25 @@ class UriToPathTest(unittest.TestCase):
 class SplitPathTest(unittest.TestCase):
 
     def test_empty_path(self):
-        self.assertEqual([], path.split_path(''))
+        self.assertEqual([], path.split_path(b''))
 
     def test_single_dir(self):
-        self.assertEqual(['foo'], path.split_path('foo'))
+        self.assertEqual([b'foo'], path.split_path(b'foo'))
 
     def test_dirs(self):
-        self.assertEqual(['foo', 'bar', 'baz'], path.split_path('foo/bar/baz'))
+        self.assertEqual(
+            [b'foo', b'bar', b'baz'], path.split_path(b'foo/bar/baz'))
 
     def test_initial_slash_is_ignored(self):
         self.assertEqual(
-            ['foo', 'bar', 'baz'], path.split_path('/foo/bar/baz'))
+            [b'foo', b'bar', b'baz'], path.split_path(b'/foo/bar/baz'))
 
     def test_only_slash(self):
-        self.assertEqual([], path.split_path('/'))
+        self.assertEqual([], path.split_path(b'/'))
+
+    def test_fails_on_unicode_strings(self):
+        with self.assertRaises(TypeError):
+            path.split_path('/')
 
 
 class ExpandPathTest(unittest.TestCase):
@@ -214,7 +223,7 @@ class ExpandPathTest(unittest.TestCase):
 
     def test_xdg_subsititution(self):
         self.assertEqual(
-            GLib.get_user_data_dir() + b'/foo',
+            GLib.get_user_data_dir().encode('utf-8') + b'/foo',
             path.expand_path(b'$XDG_DATA_DIR/foo'))
 
     def test_xdg_subsititution_unknown(self):
@@ -226,30 +235,30 @@ class FindMTimesTest(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):  # noqa: N802
-        self.tmpdir = tempfile.mkdtemp(b'.mopidy-tests')
+        self.tmpdir = tempfile.mkdtemp('.mopidy-tests').encode('utf-8')
 
     def tearDown(self):  # noqa: N802
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def mkdir(self, *args):
-        name = os.path.join(self.tmpdir, *[bytes(a) for a in args])
+        name = os.path.join(self.tmpdir, *[a.encode('utf-8') for a in args])
         os.mkdir(name)
         return name
 
     def touch(self, *args):
-        name = os.path.join(self.tmpdir, *[bytes(a) for a in args])
+        name = os.path.join(self.tmpdir, *[a.encode('utf-8') for a in args])
         open(name, 'w').close()
         return name
 
     def test_names_are_bytestrings(self):
         """We shouldn't be mixing in unicode for paths."""
         result, errors = path.find_mtimes(tests.path_to_data_dir(''))
-        for name in result.keys() + errors.keys():
+        for name in list(result.keys()) + list(errors.keys()):
             self.assertEqual(name, tests.IsA(bytes))
 
     def test_nonexistent_dir(self):
         """Non existent search roots are an error"""
-        missing = os.path.join(self.tmpdir, 'does-not-exist')
+        missing = os.path.join(self.tmpdir, b'does-not-exist')
         result, errors = path.find_mtimes(missing)
         self.assertEqual(result, {})
         self.assertEqual(errors, {missing: tests.IsA(exceptions.FindError)})
@@ -310,7 +319,7 @@ class FindMTimesTest(unittest.TestCase):
     def test_symlinks_are_ignored(self):
         """By default symlinks should be treated as an error"""
         target = self.touch('target')
-        link = os.path.join(self.tmpdir, 'link')
+        link = os.path.join(self.tmpdir, b'link')
         os.symlink(target, link)
 
         result, errors = path.find_mtimes(self.tmpdir)
@@ -320,7 +329,7 @@ class FindMTimesTest(unittest.TestCase):
     def test_symlink_to_file_as_root_is_followed(self):
         """Passing a symlink as the root should be followed when follow=True"""
         target = self.touch('target')
-        link = os.path.join(self.tmpdir, 'link')
+        link = os.path.join(self.tmpdir, b'link')
         os.symlink(target, link)
 
         result, errors = path.find_mtimes(link, follow=True)
@@ -332,7 +341,7 @@ class FindMTimesTest(unittest.TestCase):
 
     def test_symlink_pointing_at_itself_fails(self):
         """Symlink pointing at itself should give as an OS error"""
-        link = os.path.join(self.tmpdir, 'link')
+        link = os.path.join(self.tmpdir, b'link')
         os.symlink(link, link)
 
         result, errors = path.find_mtimes(link, follow=True)
@@ -341,12 +350,12 @@ class FindMTimesTest(unittest.TestCase):
 
     def test_symlink_pointing_at_parent_fails(self):
         """We should detect a loop via the parent and give up on the branch"""
-        os.symlink(self.tmpdir, os.path.join(self.tmpdir, 'link'))
+        os.symlink(self.tmpdir, os.path.join(self.tmpdir, b'link'))
 
         result, errors = path.find_mtimes(self.tmpdir, follow=True)
         self.assertEqual({}, result)
         self.assertEqual(1, len(errors))
-        self.assertEqual(tests.IsA(Exception), errors.values()[0])
+        self.assertEqual(tests.IsA(Exception), list(errors.values())[0])
 
     def test_indirect_symlink_loop(self):
         """More indirect loops should also be detected"""
