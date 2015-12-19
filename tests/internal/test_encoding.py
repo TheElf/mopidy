@@ -1,9 +1,12 @@
+# encoding: utf-8
+
 from __future__ import absolute_import, unicode_literals
 
 import unittest
 
 import mock
 
+from mopidy import compat
 from mopidy.internal import encoding
 
 
@@ -14,16 +17,19 @@ class LocaleDecodeTest(unittest.TestCase):
         mock.return_value = 'UTF-8'
 
         result = encoding.locale_decode(
-            b'[Errno 98] Adresse d\xc3\xa9j\xc3\xa0 utilis\xc3\xa9e')
+            '[Errno 98] Adresse déjà utilisée'.encode('utf-8'))
 
-        self.assertEqual('[Errno 98] Adresse d\xe9j\xe0 utilis\xe9e', result)
+        self.assertEqual('[Errno 98] Adresse déjà utilisée', result)
 
     def test_can_decode_an_ioerror_with_french_content(self, mock):
         mock.return_value = 'UTF-8'
 
-        error = IOError(98, b'Adresse d\xc3\xa9j\xc3\xa0 utilis\xc3\xa9e')
+        if compat.PY2:
+            error = IOError(98, 'Adresse déjà utilisée'.encode('utf-8'))
+        else:
+            error = IOError(98, 'Adresse déjà utilisée')
         result = encoding.locale_decode(error)
-        expected = '[Errno 98] Adresse d\xe9j\xe0 utilis\xe9e'
+        expected = '[Errno 98] Adresse déjà utilisée'
 
         self.assertEqual(
             expected, result,
@@ -37,9 +43,9 @@ class LocaleDecodeTest(unittest.TestCase):
 
         self.assertFalse(mock.called)
 
-    def test_does_not_use_locale_to_decode_ascii_bytestrings(self, mock):
+    def test_does_use_locale_to_decode_ascii_bytestrings(self, mock):
         mock.return_value = 'UTF-8'
 
-        encoding.locale_decode('abc')
+        encoding.locale_decode(b'abc')
 
-        self.assertFalse(mock.called)
+        mock.assert_called_once_with()
