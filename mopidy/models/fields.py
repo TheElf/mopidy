@@ -60,7 +60,6 @@ class Field(object):
 
 
 class String(Field):
-
     """
     Specialized :class:`Field` which is wired up for bytes and unicode.
 
@@ -71,7 +70,8 @@ class String(Field):
         # TODO: normalize to unicode?
         # TODO: only allow unicode?
         # TODO: disallow empty strings?
-        super(String, self).__init__(type=compat.string_types, default=default)
+        super(String, self).__init__(
+            type=(bytes, compat.text_type), default=default)
 
 
 class Date(String):

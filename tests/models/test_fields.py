@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import unittest
 
+from mopidy import compat
 from mopidy.models.fields import *  # noqa: F403
 
 
@@ -136,6 +137,7 @@ class IntegerTest(unittest.TestCase):
         instance.attr = int(123)
         self.assertEqual(123, instance.attr)
 
+    @unittest.skipIf(compat.PY3, 'There is no long type in Python 3')
     def test_long_allowed(self):
         instance = create_instance(Integer())
         instance.attr = long(123)
