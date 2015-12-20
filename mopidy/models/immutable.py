@@ -148,7 +148,8 @@ class _ValidatedImmutableObjectMeta(type):
 
         attrs['_fields'] = fields
         attrs['_instances'] = weakref.WeakValueDictionary()
-        attrs['__slots__'] = list(attrs.get('__slots__', [])) + fields.values()
+        attrs['__slots__'] = (
+            list(attrs.get('__slots__', [])) + list(fields.values()))
 
         return super(_ValidatedImmutableObjectMeta, cls).__new__(
             cls, name, bases, attrs)
@@ -159,7 +160,8 @@ class _ValidatedImmutableObjectMeta(type):
         return cls._instances.setdefault(weakref.ref(instance), instance)
 
 
-class ValidatedImmutableObject(ImmutableObject):
+class ValidatedImmutableObject(
+        compat.with_metaclass(_ValidatedImmutableObjectMeta, ImmutableObject)):
     """
     Superclass for immutable objects whose fields can only be modified via the
     constructor. Fields should be :class:`Field` instances to ensure type

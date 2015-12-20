@@ -60,3 +60,10 @@ else:
         return iter(dct.values(**kwargs))
 
     zip_longest = itertools.zip_longest
+
+
+def with_metaclass(meta, *bases):
+    class metaclass(meta):
+        def __new__(cls, name, this_bases, d):
+            return meta(name, bases, d)
+    return type.__new__(metaclass, str('temporary_class'), (), {})

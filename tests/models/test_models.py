@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import json
 import unittest
 
+from mopidy import compat
 from mopidy.models import (
     Album, Artist, Image, ModelJSONEncoder, Playlist, Ref, SearchResult,
     TlTrack, Track, model_json_decoder)
@@ -132,9 +133,12 @@ class RefTest(unittest.TestCase):
             Ref(foo='baz')
 
     def test_repr_without_results(self):
+        if compat.PY2:
+            expected = "Ref(name=u'foo', type='artist', uri='uri')"
+        else:
+            expected = "Ref(name='foo', type='artist', uri='uri')"
         self.assertEqual(
-            "Ref(name=u'foo', type='artist', uri='uri')",
-            repr(Ref(uri='uri', name='foo', type='artist')))
+            expected, repr(Ref(uri='uri', name='foo', type='artist')))
 
     def test_serialize_without_results(self):
         self.assertDictEqual(
@@ -246,9 +250,11 @@ class ArtistTest(unittest.TestCase):
             Artist(serialize='baz')
 
     def test_repr(self):
-        self.assertEqual(
-            "Artist(name=u'name', uri='uri')",
-            repr(Artist(uri='uri', name='name')))
+        if compat.PY2:
+            expected = "Artist(name=u'name', uri='uri')"
+        else:
+            expected = "Artist(name='name', uri='uri')"
+        self.assertEqual(expected, repr(Artist(uri='uri', name='name')))
 
     def test_serialize(self):
         self.assertDictEqual(
@@ -411,13 +417,23 @@ class AlbumTest(unittest.TestCase):
             Album(foo='baz')
 
     def test_repr_without_artists(self):
-        self.assertEqual(
-            "Album(name=u'name', uri='uri')",
-            repr(Album(uri='uri', name='name')))
+        if compat.PY2:
+            expected = "Album(name=u'name', uri='uri')"
+        else:
+            expected = "Album(name='name', uri='uri')"
+        self.assertEqual(expected, repr(Album(uri='uri', name='name')))
 
     def test_repr_with_artists(self):
+        if compat.PY2:
+            expected = (
+                "Album(artists=[Artist(name=u'foo')], "
+                "name=u'name', uri='uri')")
+        else:
+            expected = (
+                "Album(artists=[Artist(name='foo')], "
+                "name='name', uri='uri')")
         self.assertEqual(
-            "Album(artists=[Artist(name=u'foo')], name=u'name', uri='uri')",
+            expected,
             repr(Album(uri='uri', name='name', artists=[Artist(name='foo')])))
 
     def test_serialize_without_artists(self):
@@ -655,13 +671,23 @@ class TrackTest(unittest.TestCase):
             Track(foo='baz')
 
     def test_repr_without_artists(self):
-        self.assertEqual(
-            "Track(name=u'name', uri='uri')",
-            repr(Track(uri='uri', name='name')))
+        if compat.PY2:
+            expected = "Track(name=u'name', uri='uri')"
+        else:
+            expected = "Track(name='name', uri='uri')"
+        self.assertEqual(expected, repr(Track(uri='uri', name='name')))
 
     def test_repr_with_artists(self):
+        if compat.PY2:
+            expected = (
+                "Track(artists=[Artist(name=u'foo')], "
+                "name=u'name', uri='uri')")
+        else:
+            expected = (
+                "Track(artists=[Artist(name='foo')], "
+                "name='name', uri='uri')")
         self.assertEqual(
-            "Track(artists=[Artist(name=u'foo')], name=u'name', uri='uri')",
+            expected,
             repr(Track(uri='uri', name='name', artists=[Artist(name='foo')])))
 
     def test_serialize_without_artists(self):
@@ -1023,13 +1049,23 @@ class PlaylistTest(unittest.TestCase):
             Playlist(foo='baz')
 
     def test_repr_without_tracks(self):
-        self.assertEqual(
-            "Playlist(name=u'name', uri='uri')",
-            repr(Playlist(uri='uri', name='name')))
+        if compat.PY2:
+            expected = "Playlist(name=u'name', uri='uri')"
+        else:
+            expected = "Playlist(name='name', uri='uri')"
+        self.assertEqual(expected, repr(Playlist(uri='uri', name='name')))
 
     def test_repr_with_tracks(self):
+        if compat.PY2:
+            expected = (
+                "Playlist(name=u'name', "
+                "tracks=[Track(name=u'foo')], uri='uri')")
+        else:
+            expected = (
+                "Playlist(name='name', "
+                "tracks=[Track(name='foo')], uri='uri')")
         self.assertEqual(
-            "Playlist(name=u'name', tracks=[Track(name=u'foo')], uri='uri')",
+            expected,
             repr(Playlist(uri='uri', name='name', tracks=[Track(name='foo')])))
 
     def test_serialize_without_tracks(self):
