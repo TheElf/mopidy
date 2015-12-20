@@ -18,11 +18,11 @@ from mopidy.internal.gi import GLib
 
 logger = logging.getLogger(__name__)
 
-_default_config = []
-for base in GLib.get_system_config_dirs() + [GLib.get_user_config_dir()]:
-    base = base.encode('utf-8')
-    _default_config.append(os.path.join(base, b'mopidy', b'mopidy.conf'))
-DEFAULT_CONFIG = b':'.join(_default_config)
+
+DEFAULT_CONFIG = [
+    os.path.join(base.encode('utf-8'), b'mopidy', b'mopidy.conf')
+    for base in GLib.get_system_config_dirs() + [GLib.get_user_config_dir()]
+]
 
 
 def config_files_type(value):
