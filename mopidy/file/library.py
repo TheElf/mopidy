@@ -4,10 +4,10 @@ import logging
 import operator
 import os
 import sys
-import urllib2
 
 from mopidy import backend, exceptions, models
 from mopidy.audio import scan, tags
+from mopidy.compat import urllib
 from mopidy.internal import path
 
 
@@ -91,7 +91,8 @@ class FileLibraryProvider(backend.LibraryProvider):
 
         if not track.name:
             filename = os.path.basename(local_path)
-            name = urllib2.unquote(filename).decode(FS_ENCODING, 'replace')
+            name = urllib.parse.unquote(
+                filename).decode(FS_ENCODING, 'replace')
             track = track.copy(name=name)
 
         return [track]
