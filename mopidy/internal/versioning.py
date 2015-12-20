@@ -24,4 +24,4 @@ def get_git_version():
     version = process.stdout.read().strip()
     if version.startswith(b'v'):
         version = version[1:]
-    return version
+    return version.decode('utf-8')
