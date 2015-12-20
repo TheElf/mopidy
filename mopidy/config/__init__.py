@@ -70,7 +70,7 @@ _INITIAL_HELP = """
 
 def read(config_file):
     """Helper to load config defaults in same way across core and extensions"""
-    with io.open(config_file, 'rb') as filehandle:
+    with io.open(config_file, 'rt', encoding='utf-8') as filehandle:
         return filehandle.read()
 
 
@@ -123,9 +123,9 @@ def _load(files, defaults, overrides):
     # all in the same way?
     logger.info('Loading config from builtin defaults')
     for default in defaults:
-        if isinstance(default, compat.text_type):
-            default = default.encode('utf-8')
-        parser.readfp(io.BytesIO(default))
+        if isinstance(default, bytes):
+            default = default.decode('utf-8')
+        _read_file(parser, io.StringIO(default))
 
     # Load config from a series of config files
     files = [path.expand_path(f) for f in files]
@@ -133,14 +133,14 @@ def _load(files, defaults, overrides):
         if os.path.isdir(name):
             for filename in os.listdir(name):
                 filename = os.path.join(name, filename)
-                if os.path.isfile(filename) and filename.endswith('.conf'):
+                if os.path.isfile(filename) and filename.endswith(b'.conf'):
                     _load_file(parser, filename)
         else:
             _load_file(parser, name)
 
     # If there have been parse errors there is a python bug that causes the
     # values to be lists, this little trick coerces these into strings.
-    parser.readfp(io.BytesIO())
+    _read_file(parser, io.StringIO())
 
     raw_config = {}
     for section in parser.sections():
@@ -149,6 +149,16 @@ def _load(files, defaults, overrides):
     logger.info('Loading config from command line options')
     for section, key, value in overrides:
         raw_config.setdefault(section, {})[key] = value
+
+    # Python 3's configparser cannot parse bytes, thus we assume the config
+    # file is in UTF-8 and decode it. For some backwards compatibility, we
+    # encode all the resulting config values back to bytes.
+    for section in raw_config.values():
+        for key, value in section.items():
+            try:
+                section[key] = value.encode('utf-8')
+            except Exception:
+                assert False, repr(value)
 
     return raw_config
 
@@ -166,8 +176,8 @@ def _load_file(parser, filename):
 
     try:
         logger.info('Loading config from %s', filename)
-        with io.open(filename, 'rb') as filehandle:
-            parser.readfp(filehandle)
+        with io.open(filename, 'rt', encoding='utf-8') as fp:
+            _read_file(parser, fp)
     except configparser.MissingSectionHeaderError as e:
         logger.warning('%s does not have a config section, not loaded.',
                        filename)
@@ -179,6 +189,13 @@ def _load_file(parser, filename):
         # TODO: if this is the initial load of logging config we might not
         # have a logger at this point, we might want to handle this better.
         logger.debug('Config file %s not found; skipping', filename)
+
+
+def _read_file(parser, fp):
+    if compat.PY2:
+        parser.readfp(fp)
+    else:
+        parser.read_file(fp)
 
 
 def _validate(raw_config, schemas):
@@ -208,20 +225,20 @@ def _format(config, comments, schemas, display, disable):
             config.get(schema.name, {}), display=display)
         if not serialized:
             continue
-        output.append(b'[%s]' % bytes(schema.name))
+        output.append('[%s]' % schema.name)
         for key, value in serialized.items():
             if isinstance(value, types.DeprecatedValue):
                 continue
-            comment = bytes(comments.get(schema.name, {}).get(key, ''))
-            output.append(b'%s =' % bytes(key))
+            comment = comments.get(schema.name, {}).get(key, '')
+            output.append('%s =' % key)
             if value is not None:
-                output[-1] += b' ' + value
+                output[-1] += ' ' + value.decode('utf-8')
             if comment:
-                output[-1] += b'  ; ' + comment.capitalize()
+                output[-1] += '  ; ' + comment.capitalize()
             if disable:
-                output[-1] = re.sub(r'^', b'#', output[-1], flags=re.M)
-        output.append(b'')
-    return b'\n'.join(output).strip()
+                output[-1] = re.sub(r'^', '#', output[-1], flags=re.M)
+        output.append('')
+    return '\n'.join(output).strip().encode('utf-8')
 
 
 def _preprocess(config_string):

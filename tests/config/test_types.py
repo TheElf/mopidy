@@ -105,7 +105,7 @@ class StringTest(unittest.TestCase):
         value = types.String()
         result = value.serialize('a\n\tb')
         self.assertIsInstance(result, bytes)
-        self.assertEqual(r'a\n\tb'.encode('utf-8'), result)
+        self.assertEqual('a\\n\\tb'.encode('utf-8'), result)
 
     def test_serialize_none(self):
         value = types.String()
@@ -159,55 +159,55 @@ class IntegerTest(unittest.TestCase):
 
     def test_deserialize_conversion_success(self):
         value = types.Integer()
-        self.assertEqual(123, value.deserialize('123'))
-        self.assertEqual(0, value.deserialize('0'))
-        self.assertEqual(-10, value.deserialize('-10'))
+        self.assertEqual(123, value.deserialize(b'123'))
+        self.assertEqual(0, value.deserialize(b'0'))
+        self.assertEqual(-10, value.deserialize(b'-10'))
 
     def test_deserialize_conversion_failure(self):
         value = types.Integer()
-        self.assertRaises(ValueError, value.deserialize, 'asd')
-        self.assertRaises(ValueError, value.deserialize, '3.14')
-        self.assertRaises(ValueError, value.deserialize, '')
-        self.assertRaises(ValueError, value.deserialize, ' ')
+        self.assertRaises(ValueError, value.deserialize, b'asd')
+        self.assertRaises(ValueError, value.deserialize, b'3.14')
+        self.assertRaises(ValueError, value.deserialize, b'')
+        self.assertRaises(ValueError, value.deserialize, b' ')
 
     def test_deserialize_enforces_choices(self):
         value = types.Integer(choices=[1, 2, 3])
-        self.assertEqual(3, value.deserialize('3'))
-        self.assertRaises(ValueError, value.deserialize, '5')
+        self.assertEqual(3, value.deserialize(b'3'))
+        self.assertRaises(ValueError, value.deserialize, b'5')
 
     def test_deserialize_enforces_minimum(self):
         value = types.Integer(minimum=10)
-        self.assertEqual(15, value.deserialize('15'))
-        self.assertRaises(ValueError, value.deserialize, '5')
+        self.assertEqual(15, value.deserialize(b'15'))
+        self.assertRaises(ValueError, value.deserialize, b'5')
 
     def test_deserialize_enforces_maximum(self):
         value = types.Integer(maximum=10)
-        self.assertEqual(5, value.deserialize('5'))
-        self.assertRaises(ValueError, value.deserialize, '15')
+        self.assertEqual(5, value.deserialize(b'5'))
+        self.assertRaises(ValueError, value.deserialize, b'15')
 
     def test_deserialize_respects_optional(self):
         value = types.Integer(optional=True)
-        self.assertEqual(None, value.deserialize(''))
+        self.assertEqual(None, value.deserialize(b''))
 
 
 class BooleanTest(unittest.TestCase):
 
     def test_deserialize_conversion_success(self):
         value = types.Boolean()
-        for true in ('1', 'yes', 'true', 'on'):
+        for true in (b'1', b'yes', b'true', b'on'):
             self.assertIs(value.deserialize(true), True)
             self.assertIs(value.deserialize(true.upper()), True)
             self.assertIs(value.deserialize(true.capitalize()), True)
-        for false in ('0', 'no', 'false', 'off'):
+        for false in (b'0', b'no', b'false', b'off'):
             self.assertIs(value.deserialize(false), False)
             self.assertIs(value.deserialize(false.upper()), False)
             self.assertIs(value.deserialize(false.capitalize()), False)
 
     def test_deserialize_conversion_failure(self):
         value = types.Boolean()
-        self.assertRaises(ValueError, value.deserialize, 'nope')
-        self.assertRaises(ValueError, value.deserialize, 'sure')
-        self.assertRaises(ValueError, value.deserialize, '')
+        self.assertRaises(ValueError, value.deserialize, b'nope')
+        self.assertRaises(ValueError, value.deserialize, b'sure')
+        self.assertRaises(ValueError, value.deserialize, b'')
 
     def test_serialize_true(self):
         value = types.Boolean()
@@ -223,7 +223,7 @@ class BooleanTest(unittest.TestCase):
 
     def test_deserialize_respects_optional(self):
         value = types.Boolean(optional=True)
-        self.assertEqual(None, value.deserialize(''))
+        self.assertEqual(None, value.deserialize(b''))
 
     # TODO: test None or other invalid values into serialize?
 
@@ -259,10 +259,10 @@ class ListTest(unittest.TestCase):
     def test_deserialize_does_not_double_encode_unicode(self):
         value = types.List()
 
-        result = value.deserialize('æ, ø, å')
+        result = value.deserialize('æ, ø, å'.encode('utf-8'))
         self.assertEqual(('æ', 'ø', 'å'), result)
 
-        result = value.deserialize('æ\nø\nå')
+        result = value.deserialize('æ\nø\nå'.encode('utf-8'))
         self.assertEqual(('æ', 'ø', 'å'), result)
 
     def test_deserialize_enforces_required(self):
@@ -277,23 +277,23 @@ class ListTest(unittest.TestCase):
         value = types.List()
         result = value.serialize(('foo', 'bar', 'baz'))
         self.assertIsInstance(result, bytes)
-        self.assertRegexpMatches(result, r'foo\n\s*bar\n\s*baz')
+        self.assertRegexpMatches(result, br'foo\n\s*bar\n\s*baz')
 
     def test_serialize_none(self):
         value = types.List()
         result = value.serialize(None)
         self.assertIsInstance(result, bytes)
-        self.assertEqual(result, '')
+        self.assertEqual(result, b'')
 
 
 class LogLevelTest(unittest.TestCase):
     levels = {
-        'critical': logging.CRITICAL,
-        'error': logging.ERROR,
-        'warning': logging.WARNING,
-        'info': logging.INFO,
-        'debug': logging.DEBUG,
-        'all': logging.NOTSET,
+        b'critical': logging.CRITICAL,
+        b'error': logging.ERROR,
+        b'warning': logging.WARNING,
+        b'info': logging.INFO,
+        b'debug': logging.DEBUG,
+        b'all': logging.NOTSET,
     }
 
     def test_deserialize_conversion_success(self):
@@ -305,10 +305,10 @@ class LogLevelTest(unittest.TestCase):
 
     def test_deserialize_conversion_failure(self):
         value = types.LogLevel()
-        self.assertRaises(ValueError, value.deserialize, 'nope')
-        self.assertRaises(ValueError, value.deserialize, 'sure')
-        self.assertRaises(ValueError, value.deserialize, '')
-        self.assertRaises(ValueError, value.deserialize, ' ')
+        self.assertRaises(ValueError, value.deserialize, b'nope')
+        self.assertRaises(ValueError, value.deserialize, b'sure')
+        self.assertRaises(ValueError, value.deserialize, b'')
+        self.assertRaises(ValueError, value.deserialize, b' ')
 
     def test_serialize(self):
         value = types.LogLevel()
@@ -322,26 +322,26 @@ class HostnameTest(unittest.TestCase):
     @mock.patch('socket.getaddrinfo')
     def test_deserialize_conversion_success(self, getaddrinfo_mock):
         value = types.Hostname()
-        value.deserialize('example.com')
+        value.deserialize(b'example.com')
         getaddrinfo_mock.assert_called_once_with('example.com', None)
 
     @mock.patch('socket.getaddrinfo')
     def test_deserialize_conversion_failure(self, getaddrinfo_mock):
         value = types.Hostname()
         getaddrinfo_mock.side_effect = socket.error
-        self.assertRaises(ValueError, value.deserialize, 'example.com')
+        self.assertRaises(ValueError, value.deserialize, b'example.com')
 
     @mock.patch('socket.getaddrinfo')
     def test_deserialize_enforces_required(self, getaddrinfo_mock):
         value = types.Hostname()
-        self.assertRaises(ValueError, value.deserialize, '')
+        self.assertRaises(ValueError, value.deserialize, b'')
         self.assertEqual(0, getaddrinfo_mock.call_count)
 
     @mock.patch('socket.getaddrinfo')
     def test_deserialize_respects_optional(self, getaddrinfo_mock):
         value = types.Hostname(optional=True)
-        self.assertIsNone(value.deserialize(''))
-        self.assertIsNone(value.deserialize(' '))
+        self.assertIsNone(value.deserialize(b''))
+        self.assertIsNone(value.deserialize(b' '))
         self.assertEqual(0, getaddrinfo_mock.call_count)
 
 
@@ -349,18 +349,18 @@ class PortTest(unittest.TestCase):
 
     def test_valid_ports(self):
         value = types.Port()
-        self.assertEqual(0, value.deserialize('0'))
-        self.assertEqual(1, value.deserialize('1'))
-        self.assertEqual(80, value.deserialize('80'))
-        self.assertEqual(6600, value.deserialize('6600'))
-        self.assertEqual(65535, value.deserialize('65535'))
+        self.assertEqual(0, value.deserialize(b'0'))
+        self.assertEqual(1, value.deserialize(b'1'))
+        self.assertEqual(80, value.deserialize(b'80'))
+        self.assertEqual(6600, value.deserialize(b'6600'))
+        self.assertEqual(65535, value.deserialize(b'65535'))
 
     def test_invalid_ports(self):
         value = types.Port()
-        self.assertRaises(ValueError, value.deserialize, '65536')
-        self.assertRaises(ValueError, value.deserialize, '100000')
-        self.assertRaises(ValueError, value.deserialize, '-1')
-        self.assertRaises(ValueError, value.deserialize, '')
+        self.assertRaises(ValueError, value.deserialize, b'65536')
+        self.assertRaises(ValueError, value.deserialize, b'100000')
+        self.assertRaises(ValueError, value.deserialize, b'-1')
+        self.assertRaises(ValueError, value.deserialize, b'')
 
 
 class ExpandedPathTest(unittest.TestCase):
@@ -385,7 +385,7 @@ class PathTest(unittest.TestCase):
 
     def test_deserialize_conversion_success(self):
         result = types.Path().deserialize(b'/foo')
-        self.assertEqual('/foo', result)
+        self.assertEqual(b'/foo', result)
         self.assertIsInstance(result, types.ExpandedPath)
         self.assertIsInstance(result, bytes)
 
@@ -401,12 +401,12 @@ class PathTest(unittest.TestCase):
     def test_serialize_uses_original(self):
         path = types.ExpandedPath(b'original_path', b'expanded_path')
         value = types.Path()
-        self.assertEqual('expanded_path', path)
-        self.assertEqual('original_path', value.serialize(path))
+        self.assertEqual(b'expanded_path', path)
+        self.assertEqual(b'original_path', value.serialize(path))
 
     def test_serialize_plain_string(self):
         value = types.Path()
-        self.assertEqual('path', value.serialize(b'path'))
+        self.assertEqual(b'path', value.serialize(b'path'))
 
     def test_serialize_unicode_string(self):
         value = types.Path()

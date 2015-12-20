@@ -30,7 +30,7 @@ class LoadConfigTest(unittest.TestCase):
 
     def test_load_single_default(self):
         default = b'[foo]\nbar = baz'
-        expected = {'foo': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}}
         result = config._load([], [default], [])
         self.assertEqual(expected, result)
 
@@ -43,45 +43,45 @@ class LoadConfigTest(unittest.TestCase):
     def test_load_defaults(self):
         default1 = b'[foo]\nbar = baz'
         default2 = b'[foo2]\n'
-        expected = {'foo': {'bar': 'baz'}, 'foo2': {}}
+        expected = {'foo': {'bar': b'baz'}, 'foo2': {}}
         result = config._load([], [default1, default2], [])
         self.assertEqual(expected, result)
 
     def test_load_single_override(self):
         override = ('foo', 'bar', 'baz')
-        expected = {'foo': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}}
         result = config._load([], [], [override])
         self.assertEqual(expected, result)
 
     def test_load_overrides(self):
         override1 = ('foo', 'bar', 'baz')
         override2 = ('foo2', 'bar', 'baz')
-        expected = {'foo': {'bar': 'baz'}, 'foo2': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}, 'foo2': {'bar': b'baz'}}
         result = config._load([], [], [override1, override2])
         self.assertEqual(expected, result)
 
     def test_load_single_file(self):
         file1 = path_to_data_dir('file1.conf')
-        expected = {'foo': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}}
         result = config._load([file1], [], [])
         self.assertEqual(expected, result)
 
     def test_load_files(self):
         file1 = path_to_data_dir('file1.conf')
         file2 = path_to_data_dir('file2.conf')
-        expected = {'foo': {'bar': 'baz'}, 'foo2': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}, 'foo2': {'bar': b'baz'}}
         result = config._load([file1, file2], [], [])
         self.assertEqual(expected, result)
 
     def test_load_directory(self):
         directory = path_to_data_dir('conf1.d')
-        expected = {'foo': {'bar': 'baz'}, 'foo2': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}, 'foo2': {'bar': b'baz'}}
         result = config._load([directory], [], [])
         self.assertEqual(expected, result)
 
     def test_load_directory_only_conf_files(self):
         directory = path_to_data_dir('conf2.d')
-        expected = {'foo': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}}
         result = config._load([directory], [], [])
         self.assertEqual(expected, result)
 
@@ -91,7 +91,7 @@ class LoadConfigTest(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_load_file_with_error(self):
-        expected = {'foo': {'bar': 'baz'}}
+        expected = {'foo': {'bar': b'baz'}}
         result = config._load([path_to_data_dir('file4.conf')], [], [])
         self.assertEqual(expected, result)
 

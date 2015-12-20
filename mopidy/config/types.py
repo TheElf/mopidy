@@ -9,18 +9,28 @@ from mopidy.config import validators
 from mopidy.internal import log, path
 
 
+ESCAPES = [
+    ('\\', '\\\\'),
+    ('\n', '\\n'),
+    ('\t', '\\t'),
+    # TODO: more escapes?
+]
+
+
 def decode(value):
     if isinstance(value, compat.text_type):
         return value
-    # TODO: only unescape \n \t and \\?
-    return value.decode('string-escape').decode('utf-8')
+    value = value.decode('utf-8')
+    for unescaped, escaped in ESCAPES:
+        value = value.replace(escaped, unescaped)
+    return value
 
 
 def encode(value):
     if not isinstance(value, compat.text_type):
         return value
-    for char in ('\\', '\n', '\t'):  # TODO: more escapes?
-        value = value.replace(char, char.encode('unicode-escape'))
+    for unescaped, escaped in ESCAPES:
+        value = value.replace(unescaped, escaped)
     return value.encode('utf-8')
 
 
@@ -63,7 +73,7 @@ class ConfigValue(object):
         """Convert value back to string for saving."""
         if value is None:
             return b''
-        return bytes(value)
+        return str(value).encode('utf-8')
 
 
 class Deprecated(ConfigValue):
@@ -168,9 +178,9 @@ class Boolean(ConfigValue):
         validators.validate_required(value, self._required)
         if not value:
             return None
-        if value.lower() in self.true_values:
+        if value.lower().decode('utf-8') in self.true_values:
             return True
-        elif value.lower() in self.false_values:
+        elif value.lower().decode('utf-8') in self.false_values:
             return False
         raise ValueError('invalid value for boolean: %r' % value)
 
@@ -194,11 +204,11 @@ class List(ConfigValue):
 
     def deserialize(self, value):
         if b'\n' in value:
-            values = re.split(r'\s*\n\s*', value)
+            values = re.split(br'\s*\n\s*', value)
         else:
-            values = re.split(r'\s*,\s*', value)
+            values = re.split(br'\s*,\s*', value)
         values = (decode(v).strip() for v in values)
-        values = filter(None, values)
+        values = list(filter(None, values))
         validators.validate_required(values, self._required)
         return tuple(values)
 
@@ -255,6 +265,7 @@ class Hostname(ConfigValue):
         self._required = not optional
 
     def deserialize(self, value, display=False):
+        value = decode(value).strip()
         validators.validate_required(value, self._required)
         if not value.strip():
             return None

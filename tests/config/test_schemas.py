@@ -5,6 +5,7 @@ import unittest
 
 import mock
 
+from mopidy import compat
 from mopidy.config import schemas, types
 
 from tests import any_unicode
@@ -83,7 +84,11 @@ class ConfigSchemaTest(unittest.TestCase):
         self.schema['foo'] = types.Deprecated()
 
         result, errors = self.schema.deserialize(self.values)
-        self.assertItemsEqual(['bar', 'baz'], result.keys())
+        expected = ['bar', 'baz']
+        if compat.PY2:
+            self.assertItemsEqual(expected, result.keys())
+        else:
+            self.assertCountEqual(expected, result.keys())
         self.assertNotIn('foo', errors)
 
 
@@ -92,7 +97,7 @@ class MapConfigSchemaTest(unittest.TestCase):
     def test_conversion(self):
         schema = schemas.MapConfigSchema('test', types.LogLevel())
         result, errors = schema.deserialize(
-            {'foo.bar': 'DEBUG', 'baz': 'INFO'})
+            {'foo.bar': b'DEBUG', 'baz': b'INFO'})
 
         self.assertEqual(logging.DEBUG, result['foo.bar'])
         self.assertEqual(logging.INFO, result['baz'])
