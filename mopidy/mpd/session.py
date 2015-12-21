@@ -17,7 +17,7 @@ class MpdSession(network.LineProtocol):
 
     terminator = protocol.LINE_TERMINATOR
     encoding = protocol.ENCODING
-    delimiter = r'\r?\n'
+    delimiter = br'\r?\n'
 
     def __init__(self, connection, config=None, core=None, uri_map=None):
         super(MpdSession, self).__init__(connection)
@@ -37,7 +37,7 @@ class MpdSession(network.LineProtocol):
 
         logger.debug(
             'Response to [%s]:%s: %s', self.host, self.port,
-            formatting.indent(self.terminator.join(response)))
+            formatting.indent('\n'.join(response)))
 
         self.send_lines(response)
 
