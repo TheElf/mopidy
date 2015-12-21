@@ -2,6 +2,7 @@ from __future__ import absolute_import, absolute_import, unicode_literals
 
 import collections
 import gzip
+import io
 import json
 import logging
 import os
@@ -28,7 +29,10 @@ def load_library(json_file):
             json_file)
         return {}
     try:
-        with gzip.open(json_file, 'rb') as fp:
+        with gzip.open(json_file, 'rt') as fp:
+            # gzip.open() on Python 2 doesn't support the encoding kwarg, so we
+            # must wrap it in io.TextIOWrapper ourselves.
+            fp = io.TextIOWrapper(fp, encoding='utf-8')
             return json.load(fp, object_hook=models.model_json_decoder)
     except (IOError, ValueError) as error:
         logger.warning(

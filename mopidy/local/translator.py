@@ -2,9 +2,9 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 import os
-import urllib
 
 from mopidy import compat
+from mopidy.compat import urllib
 from mopidy.internal import path
 
 
@@ -42,11 +42,11 @@ def path_to_local_track_uri(relpath):
     URI."""
     if isinstance(relpath, compat.text_type):
         relpath = relpath.encode('utf-8')
-    return 'local:track:%s' % urllib.quote(relpath)
+    return 'local:track:%s' % urllib.parse.quote(relpath)
 
 
 def path_to_local_directory_uri(relpath):
     """Convert path relative to :confval:`local/media_dir` directory URI."""
     if isinstance(relpath, compat.text_type):
         relpath = relpath.encode('utf-8')
-    return 'local:directory:%s' % urllib.quote(relpath)
+    return 'local:directory:%s' % urllib.parse.quote(relpath)
