@@ -87,7 +87,7 @@ XSPF = b"""<?xml version="1.0" encoding="UTF-8"?>
 </playlist>
 """
 
-EXPECTED = [b'file:///tmp/foo', b'file:///tmp/bar', b'file:///tmp/baz']
+EXPECTED = ['file:///tmp/foo', 'file:///tmp/bar', 'file:///tmp/baz']
 
 
 @pytest.mark.parametrize('data,result', [

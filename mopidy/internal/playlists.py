@@ -69,15 +69,18 @@ def parse_extm3u(data):
         else:
             continue
         if not line.startswith(b'#') and line.strip():
-            yield line.strip()
+            try:
+                yield line.strip().decode('utf-8')
+            except UnicodeDecodeError:
+                continue
 
 
 def parse_pls(data):
     # TODO: convert non URIs to file URIs.
     try:
         cp = configparser.RawConfigParser()
-        cp.readfp(io.BytesIO(data))
-    except configparser.Error:
+        cp.readfp(io.StringIO(data.decode('utf-8')))
+    except (configparser.Error, UnicodeDecodeError):
         return
 
     for section in cp.sections():
@@ -119,6 +122,10 @@ def parse_urilist(data):
     result = []
     for line in data.splitlines():
         if not line.strip() or line.startswith(b'#'):
+            continue
+        try:
+            line = line.decode('utf-8')
+        except UnicodeDecodeError:
             continue
         try:
             validation.check_uri(line)
