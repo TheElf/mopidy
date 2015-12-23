@@ -65,21 +65,24 @@ def test_check_instances_with_valid_values():
 
 def test_check_instances_with_invalid_values():
     with raises(exceptions.ValidationError):
-        validation.check_instances('abc', compat.string_types)
+        validation.check_instances('abc', compat.text_type)
     with raises(exceptions.ValidationError):
-        validation.check_instances(['abc', 123], compat.string_types)
+        validation.check_instances(['abc', 123], compat.text_type)
     with raises(exceptions.ValidationError):
-        validation.check_instances(None, compat.string_types)
+        validation.check_instances(None, compat.text_type)
     with raises(exceptions.ValidationError):
-        validation.check_instances([None], compat.string_types)
+        validation.check_instances([None], compat.text_type)
     with raises(exceptions.ValidationError):
-        validation.check_instances(iter(['abc']), compat.string_types)
+        validation.check_instances(iter(['abc']), compat.text_type)
 
 
 def test_check_instances_error_message():
     with raises(exceptions.ValidationError) as excinfo:
-        validation.check_instances([1], compat.string_types)
-    assert 'Expected a list of basestring, not [1]' == str(excinfo.value)
+        validation.check_instances([1], compat.text_type)
+    if compat.PY2:
+        assert 'Expected a list of unicode, not [1]' == str(excinfo.value)
+    else:
+        assert 'Expected a list of str, not [1]' == str(excinfo.value)
 
 
 def test_check_query_valid_values():
@@ -139,7 +142,10 @@ def test_check_uri_with_invalid_values():
 def test_check_uri_error_message():
     with raises(exceptions.ValidationError) as excinfo:
         validation.check_uri('testing')
-    assert "Expected a valid URI, not u'testing'" == str(excinfo.value)
+    if compat.PY2:
+        assert "Expected a valid URI, not u'testing'" == str(excinfo.value)
+    else:
+        assert "Expected a valid URI, not 'testing'" == str(excinfo.value)
 
 
 def test_check_uris_with_valid_values():
@@ -164,4 +170,7 @@ def test_check_uris_with_invalid_values():
 def test_check_uris_error_message():
     with raises(exceptions.ValidationError) as excinfo:
         validation.check_uris('testing')
-    assert "Expected a list of URIs, not u'testing'" == str(excinfo.value)
+    if compat.PY2:
+        assert "Expected a list of URIs, not u'testing'" == str(excinfo.value)
+    else:
+        assert "Expected a list of URIs, not 'testing'" == str(excinfo.value)

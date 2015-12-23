@@ -31,7 +31,7 @@ if PY2:
     urllib = fake_python3_urllib_module()
 
     integer_types = (int, long)  # noqa
-    string_types = basestring  # noqa
+    string_types = (basestring,)  # noqa
     text_type = unicode  # noqa
 
     input = raw_input  # noqa
