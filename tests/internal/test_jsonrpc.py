@@ -7,7 +7,7 @@ import mock
 
 import pykka
 
-from mopidy import core, models
+from mopidy import compat, core, models
 from mopidy.internal import deprecation, jsonrpc
 
 from tests import dummy_backend
@@ -500,9 +500,13 @@ class JsonRpcSingleCommandErrorTest(JsonRpcTestBase):
 
         data = error['data']
         self.assertEqual(data['type'], 'TypeError')
-        self.assertEqual(
-            data['message'],
-            'get_uri_schemes() takes exactly 1 argument (2 given)')
+        if compat.PY2:
+            expected = 'get_uri_schemes() takes exactly 1 argument (2 given)'
+        else:
+            expected = (
+                'get_uri_schemes() takes 1 positional '
+                'argument but 2 were given')
+        self.assertEqual(data['message'], expected)
         self.assertIn('traceback', data)
         self.assertIn('Traceback (most recent call last):', data['traceback'])
 
